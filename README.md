@@ -22,7 +22,7 @@ Used in Bugs:
 
 Usage:
 
-	./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder]
+`./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder]
 
  - Path		  => Path to the files you want to add MOZ_OVERRIDE
  - -v 		  => Verbose Mode
@@ -32,12 +32,13 @@ Usage:
  - -W		  => Shouldn't be used, unsafe
  - -I idl_folder  => Another path to parse files but thoses won't be modified
       		     very usefull if some of your classes in Path included files that aren't in the same folder
+`
 
 To get the best results, do this:
 
-~/m-c_folder>./mach clobber; ./mach configure && ./mach build export #clean, configure and generates IDL files
+`~/m-c_folder>./mach clobber; ./mach configure && ./mach build export` #clean, configure and generates IDL files
 
-~/>./main.py ~/m-c_folder/<module> -I ~/m-c_folder
+`~/>./main.py ~/m-c_folder/<module> -I ~/m-c_folder`
 
 This way you will generate all idl files, and parse all headers used in m-c but only modify thoses in the <module> you want.
 
