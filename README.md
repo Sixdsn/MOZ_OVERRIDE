@@ -2,8 +2,9 @@ MOZ_OVERRIDE
 ============
 
 MOZ_OVERRIDE is a script I developped for Mozilla
-wich recreates the whole heritage tree for all classes in mozilla-central
-and find the child classes that inherites from a base class
+wich recreates the whole heritage tree for all classes in mozilla-central,
+
+finds the child classes that inherites from a base class
 and annotate them with MOZ_OVERRIDE (override in C++11).
 
 I should be able to enhance it to be able to give some specific details on modules and/or classes
@@ -20,6 +21,7 @@ Used in Bugs:
  - https://bugzilla.mozilla.org/show_bug.cgi?id=974687
 
 Usage:
+
 	./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder]
 
  - Path		  => Path to the files you want to add MOZ_OVERRIDE
@@ -32,10 +34,13 @@ Usage:
       		     very usefull if some of your classes in Path included files that aren't in the same folder
 
 To get the best results, do this:
+
 ~/m-c_folder>./mach clobber; ./mach configure && ./mach build export #clean, configure and generates IDL files
+
 ~/>./main.py ~/m-c_folder/<module> -I ~/m-c_folder
 
 This way you will generate all idl files, and parse all headers used in m-c but only modify thoses in the <module> you want.
 
 Feel free to open an issue if needed or mail me for a quick question.
+
 Sometimes present on IRC irc.mozilla.org #developers [:Six]
