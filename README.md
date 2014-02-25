@@ -1,7 +1,9 @@
 MOZ_OVERRIDE
 ============
 
-This script is using the CppHeaderParser Module available here: https://pypi.python.org/pypi/CppHeaderParser/
+This script is using the CppHeaderParser Module available here:
+
+https://pypi.python.org/pypi/CppHeaderParser/
 
 This module is developped by senex (Jashua Cloutier) who does a real good job on it :)
 
