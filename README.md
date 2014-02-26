@@ -1,6 +1,17 @@
 MOZ_OVERRIDE
 ============
 
+This script is using the CppHeaderParser Module available here:
+
+https://pypi.python.org/pypi/CppHeaderParser/
+
+This module is developped by senex (Jashua Cloutier) who does a real good job on it :)
+
+You just need to install it
+```
+$>pip install cppheaderparser
+```
+
 MOZ_OVERRIDE is a script I developped for Mozilla
 wich recreates the whole heritage tree for all classes in mozilla-central.
 
@@ -36,7 +47,6 @@ Usage:
 > -I idl_folder  => Another path to parse files but thoses won't be modified
 >      		     very usefull if some of your classes in Path included files that aren't in the same folder
 
-
 To get the best results, do this:
 
 > clean, configure and generates IDL files
@@ -51,4 +61,4 @@ This way you will generate all idl files, parse all headers used in m-c but only
 
 Feel free to open an issue if needed or mail me for a quick question.
 
-Sometimes present on IRC irc.mozilla.org #developers [:Six]
+I'm sometimes present on IRC irc.mozilla.org #developers [:Six]
