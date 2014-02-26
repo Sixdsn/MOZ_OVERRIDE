@@ -11,8 +11,8 @@ def over_meth(meth):
     meth = meth.replace("NS_IMETHOD_ ", "")
     meth = meth.replace("NS_IMETHOD ", "")
     meth = meth.replace("virtual ", "")
-    meth = meth.replace(SIXMOZ_rules.to_add, "")
-    meth = meth.replace(SIXMOZ_rules.to_find, "")
+    meth = meth.replace(SIXMOZ_rules.get_conf('to_add'), "")
+    meth = meth.replace(SIXMOZ_rules.get_conf('to_find'), "")
     meth = meth.replace("  ", " ")
     return (meth)
 

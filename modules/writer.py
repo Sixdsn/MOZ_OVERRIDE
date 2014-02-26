@@ -15,7 +15,7 @@ class SIXMOZ_writer():
         add_attributes()
 
     def add_moz_override(self):
-        SIXMOZ_logger.print_info("Stage 5/6: Adding " + SIXMOZ_rules.to_add + " to files")
+        SIXMOZ_logger.print_info("Stage 5/6: Adding " + SIXMOZ_rules.get_conf('to_add') + " to files")
         for classname in self.classes:
             for k in self.classes[classname]['Omeths']:
                 modify_file(self.classes[classname]['filename'], classname, self.classes[classname]['Omeths'][k][3], self.classes[classname]['Omeths'][k][2])
@@ -65,7 +65,7 @@ def add_it(line, it):
     mod = line[:l]
     if ((len(line[:l]) - 1) >= 0 and line[:l][len(line[:l]) - 1] != ' '):
         mod += " "
-    mod += SIXMOZ_rules.to_add
+    mod += SIXMOZ_rules.get_conf('to_add')
     if (len(line[l:]) > 0 and line[l:][0] != ';' and line[l:][0] != ' ' and line[l:][0] != '\n'):
         mod += " "
     mod += line[l:]
@@ -88,7 +88,7 @@ def find_meth(liste, i, content):
             mod += liste[i]
             i += 1
         if (mod.find(';') != -1 or mod.find('{') != -1):
-            if (mod.find(SIXMOZ_rules.to_add) == -1):
+            if (mod.find(SIXMOZ_rules.get_conf('to_add')) == -1):
                 mod, found = add_it(mod, 0)
             ok = 0
             content += mod
@@ -107,7 +107,7 @@ def find_meth(liste, i, content):
 def modify_file(filename, classname, line, orig):
     if (SIXMOZ_options.path not in filename or filename not in SIXMOZ_files.get_files()):
         return
-    if orig.find(SIXMOZ_rules.to_add) != -1 or orig.find(SIXMOZ_rules.to_find) != -1:
+    if orig.find(SIXMOZ_rules.get_conf('to_add')) != -1 or orig.find(SIXMOZ_rules.get_conf('to_find')) != -1:
         SIXMOZ_stats.overrided.append(classname + "::" + orig)
         return
     liste = file(filename, "r").readlines()
@@ -119,7 +119,7 @@ def modify_file(filename, classname, line, orig):
         mod = liste[i]
         if ((i + 1) == line):
             SIXMOZ_logger.print_debug("Before: [" + str(line) + "] " + str(liste[i]))
-            if (liste[i].find(SIXMOZ_rules.to_add) == -1):
+            if (liste[i].find(SIXMOZ_rules.get_conf('to_add')) == -1):
                 i, mod, content, found = find_meth(liste, i, content)
                 if (found == 1):
                     SIXMOZ_stats.overrided.append(classname + "::" + orig)

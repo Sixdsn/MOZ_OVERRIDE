@@ -13,7 +13,7 @@ class SIXMOZ_stats():
     overrided = []
     def __init__(self):
         #Number of MOZ_OVERRIDE before launch
-        self.begin = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.find_opt + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.to_add + " | wc -l")[1]
+        self.begin = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.get_conf('to_add') + " | wc -l")[1]
 
 
     def display_base(self, classes, files, idl_files):
@@ -64,13 +64,13 @@ class SIXMOZ_stats():
                 files  += classes[i]['filename']
         self.display_base(classes, files, idl_files)
         SIXMOZ_logger.print_verbose("Final Modified Files: %d" % len(files))
-        SIXMOZ_logger.print_verbose("Methods " + SIXMOZ_rules.to_add + " @Begin: " + self.begin)
+        SIXMOZ_logger.print_verbose("Methods " + SIXMOZ_rules.get_conf('to_add') + " @Begin: " + self.begin)
         SIXMOZ_logger.print_info("Overrided %d methods" % len(set(self.real_overrided)))
         SIXMOZ_logger.print_verbose("Final Modified Meths: %d" % self.modified_meths)
         SIXMOZ_logger.print_verbose("Still Missing %d methods" % virt_missed)
         SIXMOZ_logger.print_verbose("Still Missing %d member functions" % meth_missed)
-        output = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.find_opt + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.to_add + " | wc -l")
-        SIXMOZ_logger.print_info(SIXMOZ_rules.to_add + " Methods in Code: " + output[1])
+        output = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.get_conf('to_add') + " | wc -l")
+        SIXMOZ_logger.print_info(SIXMOZ_rules.get_conf('to_add') + " Methods in Code: " + output[1])
 
         @staticmethod
         def display_class(classe):

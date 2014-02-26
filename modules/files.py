@@ -26,12 +26,12 @@ class SIXMOZ_files():
                 print("Options -I %s doesn't not exist"% SIXMOZ_options.idl_folder)
                 sys.exit(1)
             SIXMOZ_logger.print_info("Getting Files from idl_folder: " + SIXMOZ_options.idl_folder)
-            idl_files = string.split(commands.getstatusoutput("find " + SIXMOZ_options.idl_folder + SIXMOZ_rules.find_opt + " | sort")[1], "\n")
+            idl_files = string.split(commands.getstatusoutput("find " + SIXMOZ_options.idl_folder + SIXMOZ_rules.get_conf('extensions') + " | sort")[1], "\n")
         return (idl_files)
 
     def find_files():
         SIXMOZ_logger.print_info("Stage 1/6: Getting files to parse: %s"% SIXMOZ_options.path)
-        files = string.split(commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.find_opt + " -or -name \"*.cpp\" | sort")[1], "\n")
+        files = string.split(commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | sort")[1], "\n")
         return (files)
 
     files = find_files()

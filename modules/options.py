@@ -15,10 +15,10 @@ def _help():
     print "-v:\t\tVerbose"
     print "-d:\t\tDebug (Include Verbose)"
     print "--dryrun:\tPerforms a Dryrun (no changes)"
-    print "-W:\t\tAdd " + SIXMOZ_rules.to_add + " to all NS_IMETHOD (won't compile)"
+    print "-W:\t\tAdd " + SIXMOZ_rules.get_conf('to_add') + " to all NS_IMETHOD (won't compile)"
     print "-I folder:\tFolder you want to get headers generated from idl_files"
     print "-h --help:\tPrint this Menu"
-    print "Path:\t\tFolder you want to add " + SIXMOZ_rules.to_add
+    print "Path:\t\tFolder you want to add " + SIXMOZ_rules.get_conf('to_add')
 
 class SIXMOZ_options():
     @staticmethod
