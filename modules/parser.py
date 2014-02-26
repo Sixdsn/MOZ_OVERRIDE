@@ -67,6 +67,8 @@ class SIXMOZ_parser():
                                                 + " line [" + str(self.classes[self.classes[classname]['inherits'][j]]['meths'][m][3]) + "]" \
                                                 + " and " + classname + "::" + self.classes[classname]['meths'][l][2] + " line [" + str(self.classes[classname]['meths'][l][3]) + "]")
                                 break
+                else:
+                    SIXMOZ_logger.print_debug("Inherit Error: " + self.classes[classname]['inherits'][j] + " not found for " + classname)
 
     def add_full_heritage(self):
         SIXMOZ_logger.print_info("Stage 3/6: Creating Heritage Tree")
