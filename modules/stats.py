@@ -73,7 +73,7 @@ class SIXMOZ_stats():
         SIXMOZ_logger.print_info(SIXMOZ_rules.to_add + " Methods in Code: " + output[1])
 
         @staticmethod
-        def display_class(self, classe):
+        def display_class(classe):
             SIXMOZ_logger.print_verbose("File: " + classe['filename'])
             SIXMOZ_logger.print_verbose("Class: " + classname)
             for j in range(len(classe['inherits'])):
