@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys
+
 class SIXMOZ_logger():
 
     @staticmethod
