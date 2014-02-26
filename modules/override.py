@@ -13,7 +13,7 @@ class SIXMOZ_override():
         self.classes = []
 
     def run(self):
-        self.parser.init()
+        self.classes = self.parser.init()
         self.stats.display_base(self.classes, self.files, self.idl_files)
         self.parser.run()
         self.stats.display(self.classes, self.files, self.idl_files)

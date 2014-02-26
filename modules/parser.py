@@ -36,6 +36,7 @@ class SIXMOZ_parser():
                         if inh == name and self.classes[classname]['typedefs'][name] not in self.classes[nclassname]['inherits']:
                             self.classes[nclassname]['inherits'].append(self.classes[classname]['typedefs'][name])
                             SIXMOZ_logger.print_debug(classname + " typedef inherits: " + self.classes[classname]['typedefs'][name])
+                            break
 
     ## @brief creates the heritage tree for all methods
     ## @param self.classes dict of all self.classes
@@ -56,6 +57,7 @@ class SIXMOZ_parser():
                                 self.classes[classname]['Ofuncs'][len(self.classes[classname]['Ofuncs'])] = self.classes[classname]['funcs'][l]
                                 SIXMOZ_logger.print_debug("OVERRIDE2: " + self.classes[classname]['inherits'][j] + "::" + self.classes[self.classes[classname]['inherits'][j]]['meths'][m][2] \
                                                 + " and " + classname + "::" + self.classes[classname]['funcs'][l][2])
+                                break
                         for l in self.classes[classname]['meths']:
                             SIXMOZ_logger.print_debug("3: " + self.classes[classname]['inherits'][j] + "::" + self.classes[self.classes[classname]['inherits'][j]]['meths'][m][0] \
                                             + " " + classname + "::" + self.classes[classname]['meths'][l][0])
@@ -64,6 +66,7 @@ class SIXMOZ_parser():
                                 SIXMOZ_logger.print_debug("OVERRIDE3: " + self.classes[classname]['inherits'][j] + "::" + self.classes[self.classes[classname]['inherits'][j]]['meths'][m][2] \
                                                 + " line [" + str(self.classes[self.classes[classname]['inherits'][j]]['meths'][m][3]) + "]" \
                                                 + " and " + classname + "::" + self.classes[classname]['meths'][l][2] + " line [" + str(self.classes[classname]['meths'][l][3]) + "]")
+                                break
 
     def add_full_heritage(self):
         SIXMOZ_logger.print_info("Stage 3/6: Creating Heritage Tree")
