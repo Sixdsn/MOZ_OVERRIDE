@@ -58,12 +58,8 @@ class SIXMOZ_stats():
                     meth_missed += 1
                     SIXMOZ_logger.print_verbose(classes[classname]["filename"] + "\t" \
                                   + "F " + tmp + "\t%d" % classes[classname]['Ofuncs'][k][3])
-        files = []
-        for i in classes:
-            if classes[i]['filename'] not in files:
-                files  += classes[i]['filename']
+
         self.display_base(classes, files, idl_files)
-        SIXMOZ_logger.print_verbose("Final Modified Files: %d" % len(files))
         SIXMOZ_logger.print_verbose("Methods " + SIXMOZ_rules.get_conf('to_add') + " @Begin: " + self.begin)
         SIXMOZ_logger.print_info("Overrided %d methods" % len(set(self.real_overrided)))
         SIXMOZ_logger.print_verbose("Final Modified Meths: %d" % self.modified_meths)

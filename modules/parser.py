@@ -3,11 +3,16 @@
 import sys
 import CppHeaderParser
 
+import concurrent.futures
+
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
 from options import SIXMOZ_options
 from writer import SIXMOZ_writer
 import parser_func
+
+def chunks(seq, n):
+    return (seq[i:i+n] for i in xrange(0, len(seq), n))
 
 class SIXMOZ_parser():
     def __init__(self, files, idl_files):
@@ -95,111 +100,131 @@ class SIXMOZ_parser():
     def parse_header_files(self):
         SIXMOZ_logger.print_info("Stage 2/6: Parsing Header Files")
         nb_files = len(self.files) + len(self.idl_files)
-        accessType_tab = [ "public", "private", "protected" ]
-        saveout = sys.stdout
-        dev_null = open("/dev/null", 'w')
         files = self.files + self.idl_files
-        for id_file in range(len(files)):
-            try:
-                sys.stdout = dev_null
-                cppHeader = CppHeaderParser.CppHeader(files[id_file])
-                sys.stdout = saveout
-                if (SIXMOZ_logger.print_verbose != SIXMOZ_logger.verbose):
-                    SIXMOZ_logger.foo_print("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
-                else:
-                    SIXMOZ_logger.print_verbose("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
-            except CppHeaderParser.CppParseError,  e:
-                sys.stdout = saveout
-                SIXMOZ_logger.print_error(str(e), files[id_file])
-                continue
-            except:
-                sys.stdout = saveout
-                SIXMOZ_logger.print_error("Unknown", files[id_file])
-                continue
-            SIXMOZ_logger.print_debug("NB CLASSES: " + str(len(cppHeader.classes)))
-            SIXMOZ_logger.print_debug(cppHeader.classes)
-            for HeaderClass in cppHeader.classes:
-                classname = ""
-                namespace = ""
-                if len(cppHeader.classes[HeaderClass]["namespace"]):
-                    namespace = cppHeader.classes[HeaderClass]["namespace"].strip("::") + "::"
-                classname += namespace
-                classname += cppHeader.classes[HeaderClass]["name"]
-                SIXMOZ_logger.print_debug("Class: " + classname)
-                if (classname in self.classes and sys.argv[1] in self.classes[classname]['filename']):
-                    SIXMOZ_logger.print_debug("Duplicate: " + files[id_file] + " => " + classname)
+        self.classes = {}
+        saveout = sys.stdout
+        #As CppHeaderParser doesn't support multithread, wu keep only one worker
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            listes = list(chunks(files, len(files) / 4))
+            future_task = {executor.submit(do_parse, liste): liste for liste in listes}
+            for future in concurrent.futures.as_completed(future_task):
+                try:
+                    self.classes = dict(self.classes.items() + future.result().items())
+                except Exception as exc:
+                    sys.stdout = saveout
+                    print('Worker generated an exception: %s' % (exc))
                     continue
-                self.classes[classname] = {}                
-                self.classes[classname]['filename'] = files[id_file]
-                self.classes[classname]['inherits'] = []
-                self.classes[classname]['namespace'] = namespace
-                self.classes[classname]['funcs'] = {}
-                self.classes[classname]['meths'] = {}
-                self.classes[classname]['Ofuncs'] = {}
-                self.classes[classname]['Omeths'] = {}
-                self.classes[classname]['nested_typedefs'] = {}
-                self.classes[classname]['typedefs'] = {}
-                for inherit in range(len(cppHeader.classes[HeaderClass]["inherits"])):
-                    self.classes[classname]['inherits'].append(cppHeader.classes[HeaderClass]["inherits"][inherit]["class"])
-                    SIXMOZ_logger.print_debug("Inherits: " +  self.classes[classname]['inherits'][inherit])
-                for accessType in accessType_tab:
-                    for id_func in range(len(cppHeader.classes[HeaderClass]["methods"][accessType])):
-                        SIXMOZ_logger.print_debug("meth name: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"])
-                        SIXMOZ_logger.print_debug("meth ret: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"] \
-                                        + " => " + parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"]))
-                        SIXMOZ_logger.print_debug(cppHeader.classes[HeaderClass]["methods"][accessType][id_func])
-                        meths = parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"])
-                        if (len(meths)):
-                            meths += " "
-                        meths += cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"] + " ("
-                        params = ""
-                        for param in range(len(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"])):
-                            SIXMOZ_logger.print_debug("meth params: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"])
-                            real_param = cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"].split("::") 
-                            params += real_param[len(real_param) - 1:][0]
-                            SIXMOZ_logger.print_debug("Param: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"] \
-                                            + " => " + real_param[len(real_param) - 1:][0])
-                            params += " "
-                        if (params != "void "):
-                            meths += params
-                        meths +=  ")"
-                        if (cppHeader.classes[HeaderClass]["methods"][accessType][id_func]['const']):
-                            meths += " const"
-                        if (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("virtual") != -1) \
-                                or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD") != -1) \
-                                or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD_") != -1):
-                            if SIXMOZ_options.achtung and ((cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD") != -1) \
-                                                or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD_") != -1)) \
-                                                and ("= 0 ;" not in cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]):
-                                self.classes[classname]['Omeths'][len(self.classes[classname]['Omeths'])] = parser_func.over_meth(meths), \
-                                    parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
-                                    cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
-                                    cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
-                                    cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
-                            SIXMOZ_logger.print_debug("Meths: " + meths)
-                            self.classes[classname]['meths'][len(self.classes[classname]['meths'])] = parser_func.over_meth(meths), \
+        sys.stdout = saveout
+
+def do_parse(files):
+    classes = {}
+    accessType_tab = [ "public", "private", "protected" ]
+    saveout = sys.stdout
+    dev_null = open("/dev/null", 'w')
+    for id_file in range(len(files)):
+        try:
+            sys.stdout = dev_null
+            cppHeader = CppHeaderParser.CppHeader(files[id_file])
+            sys.stdout = saveout
+            # if (SIXMOZ_logger.print_verbose != SIXMOZ_logger.verbose):
+            #     SIXMOZ_logger.foo_print("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
+            # else:
+            #     SIXMOZ_logger.print_verbose("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
+        except CppHeaderParser.CppParseError,  e:
+            sys.stdout = saveout
+            SIXMOZ_logger.print_error(str(e), files[id_file])
+            continue
+        except Exception,  e:
+            sys.stdout = saveout
+            SIXMOZ_logger.print_error(str(e), files[id_file])
+            continue
+        except:
+            sys.stdout = saveout
+            SIXMOZ_logger.print_error("Unknown", files[id_file])
+            continue
+        SIXMOZ_logger.print_debug("NB CLASSES: " + str(len(cppHeader.classes)))
+        SIXMOZ_logger.print_debug(cppHeader.classes)
+        for HeaderClass in cppHeader.classes:
+            classname = ""
+            namespace = ""
+            if len(cppHeader.classes[HeaderClass]["namespace"]):
+                namespace = cppHeader.classes[HeaderClass]["namespace"].strip("::") + "::"
+            classname += namespace
+            classname += cppHeader.classes[HeaderClass]["name"]
+            SIXMOZ_logger.print_debug("Class: " + classname)
+            if (classname in classes and sys.argv[1] in classes[classname]['filename']):
+                SIXMOZ_logger.print_debug("Duplicate: " + files[id_file] + " => " + classname)
+                continue
+            classes[classname] = {}                
+            classes[classname]['filename'] = files[id_file]
+            classes[classname]['inherits'] = []
+            classes[classname]['namespace'] = namespace
+            classes[classname]['funcs'] = {}
+            classes[classname]['meths'] = {}
+            classes[classname]['Ofuncs'] = {}
+            classes[classname]['Omeths'] = {}
+            classes[classname]['nested_typedefs'] = {}
+            classes[classname]['typedefs'] = {}
+            for inherit in range(len(cppHeader.classes[HeaderClass]["inherits"])):
+                classes[classname]['inherits'].append(cppHeader.classes[HeaderClass]["inherits"][inherit]["class"])
+                SIXMOZ_logger.print_debug("Inherits: " +  classes[classname]['inherits'][inherit])
+            for accessType in accessType_tab:
+                for id_func in range(len(cppHeader.classes[HeaderClass]["methods"][accessType])):
+                    SIXMOZ_logger.print_debug("meth name: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"])
+                    SIXMOZ_logger.print_debug("meth ret: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"] \
+                                    + " => " + parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"]))
+                    SIXMOZ_logger.print_debug(cppHeader.classes[HeaderClass]["methods"][accessType][id_func])
+                    meths = parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"])
+                    if (len(meths)):
+                        meths += " "
+                    meths += cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"] + " ("
+                    params = ""
+                    for param in range(len(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"])):
+                        SIXMOZ_logger.print_debug("meth params: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"])
+                        real_param = cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"].split("::") 
+                        params += real_param[len(real_param) - 1:][0]
+                        SIXMOZ_logger.print_debug("Param: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["parameters"][param]["type"] \
+                                        + " => " + real_param[len(real_param) - 1:][0])
+                        params += " "
+                    if (params != "void "):
+                        meths += params
+                    meths +=  ")"
+                    if (cppHeader.classes[HeaderClass]["methods"][accessType][id_func]['const']):
+                        meths += " const"
+                    if (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("virtual") != -1) \
+                            or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD") != -1) \
+                            or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD_") != -1):
+                        if SIXMOZ_options.achtung and ((cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD") != -1) \
+                                            or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD_") != -1)) \
+                                            and ("= 0 ;" not in cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]):
+                            classes[classname]['Omeths'][len(classes[classname]['Omeths'])] = parser_func.over_meth(meths), \
                                 parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
-                        else:
-                            SIXMOZ_logger.print_debug("Funcs: " + meths)
-                            self.classes[classname]['funcs'][len(self.classes[classname]['funcs'])] = parser_func.over_meth(meths), \
-                                parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
-                                cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
-                                cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
-                                cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
-                        SIXMOZ_logger.print_debug(classname + " Funcs(" + str(len(self.classes[classname]['funcs'])) + ") " + " meths(" + str(len(self.classes[classname]['meths'])) + ")")
-                self.classes[classname]['nested_typedefs'] = cppHeader.classes[HeaderClass]._public_typedefs
-                self.classes[classname]['typedefs'] = cppHeader.typedefs
-                for name in cppHeader.classes[HeaderClass]._public_typedefs:
-                    SIXMOZ_logger.print_debug("standard: " + cppHeader.classes[HeaderClass]._public_typedefs[name] + " => " + name)
-                for l in self.classes[classname]['funcs']:
-                    SIXMOZ_logger.print_debug("Func: " + str(l)+ " " + classname + "::" + self.classes[classname]['funcs'][l][0])
-                for l in self.classes[classname]['meths']:
-                    SIXMOZ_logger.print_debug("Meth: " + str(l)+ " " + classname + "::" + self.classes[classname]['meths'][l][0])
-                for name in cppHeader.typedefs:
-                    SIXMOZ_logger.print_debug("OTHER: " + cppHeader.typedefs[name] + " => " + name) 
-            del cppHeader
-        print ""
-        dev_null.close()
+                        SIXMOZ_logger.print_debug("Meths: " + meths)
+                        classes[classname]['meths'][len(classes[classname]['meths'])] = parser_func.over_meth(meths), \
+                            parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
+                    else:
+                        SIXMOZ_logger.print_debug("Funcs: " + meths)
+                        classes[classname]['funcs'][len(classes[classname]['funcs'])] = parser_func.over_meth(meths), \
+                            parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
+                            cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
+                    SIXMOZ_logger.print_debug(classname + " Funcs(" + str(len(classes[classname]['funcs'])) + ") " + " meths(" + str(len(classes[classname]['meths'])) + ")")
+            classes[classname]['nested_typedefs'] = cppHeader.classes[HeaderClass]._public_typedefs
+            classes[classname]['typedefs'] = cppHeader.typedefs
+            for name in cppHeader.classes[HeaderClass]._public_typedefs:
+                SIXMOZ_logger.print_debug("standard: " + cppHeader.classes[HeaderClass]._public_typedefs[name] + " => " + name)
+            for l in classes[classname]['funcs']:
+                SIXMOZ_logger.print_debug("Func: " + str(l)+ " " + classname + "::" + classes[classname]['funcs'][l][0])
+            for l in classes[classname]['meths']:
+                SIXMOZ_logger.print_debug("Meth: " + str(l)+ " " + classname + "::" + classes[classname]['meths'][l][0])
+            for name in cppHeader.typedefs:
+                SIXMOZ_logger.print_debug("OTHER: " + cppHeader.typedefs[name] + " => " + name) 
+    dev_null.close()
+    return (classes)
