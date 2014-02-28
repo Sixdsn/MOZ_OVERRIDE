@@ -6,11 +6,11 @@ from parser import SIXMOZ_parser
 
 class SIXMOZ_override():
     def __init__(self):
+        self.classes = []
         self.stats = SIXMOZ_stats()
         self.files = SIXMOZ_files.get_files()
         self.idl_files = SIXMOZ_files.get_idl_files()
         self.parser = SIXMOZ_parser(self.files, self.idl_files)
-        self.classes = []
 
     def run(self):
         self.classes = self.parser.init()
