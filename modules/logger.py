@@ -1,9 +1,17 @@
 #!/usr/bin/python
 
+import threading
 import sys
 
 class SIXMOZ_logger():
 
+    rlock = threading.RLock()
+
+    @staticmethod
+    def __my_print(bar):
+        with SIXMOZ_logger.rlock:
+            print(bar)
+            
     @staticmethod
     def __void_write_file(filename, content):
         pass
@@ -26,18 +34,18 @@ class SIXMOZ_logger():
     ## @returns void
     @staticmethod
     def __debug(param):
-        print "[DEBUG] ", param
+        SIXMOZ_logger.__my_print("[DEBUG] %s"% str(param))
 
     ## @brief print verbose if "-v" or "-d"
     ## @param param string
     ## @returns void
     @staticmethod
     def verbose(param):
-        print "[VERBOSE] ", param
+        SIXMOZ_logger.__my_print("[VERBOSE] %s"% str(param))
 
     @staticmethod
     def __void_write_file(filename, content = 0):
-        self.print_verbose("[DRYRUN]: " + filename)
+        self.print_verbose("[DRYRUN]: %s"% filename)
 
     @staticmethod
     def foo_print(bar):
@@ -66,7 +74,7 @@ class SIXMOZ_logger():
     ## @returns void
     @staticmethod
     def print_info(param):
-        print "[INFO] ", param
+        SIXMOZ_logger.__my_print("[INFO] %s"% str(param))
 
     @staticmethod
     def print_error(msg, filename):
