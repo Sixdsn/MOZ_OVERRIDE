@@ -45,7 +45,7 @@ class SIXMOZ_logger():
 
     @staticmethod
     def __void_write_file(filename, content = 0):
-        self.print_verbose("[DRYRUN]: %s"% filename)
+        SIXMOZ_logger.print_verbose("[DRYRUN]: %s"% filename)
 
     @staticmethod
     def foo_print(bar):
@@ -66,7 +66,7 @@ class SIXMOZ_logger():
         SIXMOZ_logger.print_debug = staticmethod(SIXMOZ_logger.__debug)
 
     @staticmethod
-    def set_dry_run():
+    def set_dryrun():
         SIXMOZ_logger.dryrun = staticmethod(SIXMOZ_logger.__void_write_file)
 
     ## @brief print info

@@ -13,8 +13,9 @@ class SIXMOZ_stats():
     overrided = []
     def __init__(self):
         #Number of MOZ_OVERRIDE before launch
-        self.begin = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.get_conf('to_add') + " | wc -l")[1]
-
+        self.begin = commands.getstatusoutput("find " + SIXMOZ_options.path + " -type f -readable " +
+                                              SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | xargs grep " +
+                                              SIXMOZ_rules.get_conf('to_add') + " | wc -l")[1]
 
     def display_base(self, classes, files, idl_files):
         tot_meths = 0
@@ -54,7 +55,7 @@ class SIXMOZ_stats():
                 if tmp not in self.overrided:
                     if firstprint == 0:
                         firstprint = 1
-                        print_verbose("NOT OVERRIDED!!!:")
+                        SIXMOZ_logger.print_verbose("NOT OVERRIDED!!!:")
                     meth_missed += 1
                     SIXMOZ_logger.print_verbose(classes[classname]["filename"] + "\t" \
                                   + "F " + tmp + "\t%d" % classes[classname]['Ofuncs'][k][3])
@@ -65,7 +66,8 @@ class SIXMOZ_stats():
         SIXMOZ_logger.print_verbose("Final Modified Meths: %d" % self.modified_meths)
         SIXMOZ_logger.print_verbose("Still Missing %d methods" % virt_missed)
         SIXMOZ_logger.print_verbose("Still Missing %d member functions" % meth_missed)
-        output = commands.getstatusoutput("find " + SIXMOZ_options.path + SIXMOZ_rules.get_conf('extensions') + " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.get_conf('to_add') + " | wc -l")
+        output = commands.getstatusoutput("find " + SIXMOZ_options.path + " -type f -readable " + SIXMOZ_rules.get_conf('extensions') +
+                                          " -or -name \"*.cpp\" | xargs grep " + SIXMOZ_rules.get_conf('to_add') + " | wc -l")
         SIXMOZ_logger.print_info(SIXMOZ_rules.get_conf('to_add') + " Methods in Code: " + output[1])
 
         @staticmethod
