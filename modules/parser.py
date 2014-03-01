@@ -9,6 +9,7 @@ from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
 from options import SIXMOZ_options
 from writer import SIXMOZ_writer
+from options import SIXMOZ_options
 import parser_func
 
 def chunks(seq, n):
@@ -104,9 +105,9 @@ class SIXMOZ_parser():
         self.classes = {}
         saveout = sys.stdout
         #As CppHeaderParser doesn't support multithread, wu keep only one worker
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            listes = list(chunks(files, len(files) / 4))
-            future_task = {executor.submit(do_parse, liste): liste for liste in listes}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+            listes = list(chunks(files, len(files) / SIXMOZ_options.workers))
+            future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
                     self.classes = dict(self.classes.items() + future.result().items())
@@ -116,20 +117,28 @@ class SIXMOZ_parser():
                     continue
         sys.stdout = saveout
 
-def do_parse(files):
+def static_var(varname, value):
+    def decorate(func):
+        setattr(func, varname, value)
+        return func
+    return decorate
+
+@static_var("file_cpt", -1)
+def do_parse(files, nb_files):
     classes = {}
     accessType_tab = [ "public", "private", "protected" ]
     saveout = sys.stdout
     dev_null = open("/dev/null", 'w')
     for id_file in range(len(files)):
         try:
+            do_parse.file_cpt += 1
             sys.stdout = dev_null
             cppHeader = CppHeaderParser.CppHeader(files[id_file])
             sys.stdout = saveout
-            # if (SIXMOZ_logger.print_verbose != SIXMOZ_logger.verbose):
-            #     SIXMOZ_logger.foo_print("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
-            # else:
-            #     SIXMOZ_logger.print_verbose("[" + str(id_file * 100 / nb_files)  + " %] File: " + files[id_file])
+            if (SIXMOZ_logger.print_verbose != SIXMOZ_logger.verbose):
+                SIXMOZ_logger.foo_print("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
+            else:
+                SIXMOZ_logger.print_verbose("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
         except CppHeaderParser.CppParseError,  e:
             sys.stdout = saveout
             SIXMOZ_logger.print_error(str(e), files[id_file])
