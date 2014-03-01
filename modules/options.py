@@ -7,18 +7,18 @@ from logger import SIXMOZ_logger
 
 ## @brief print usage
 def usage():
-    print "Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder] [-J Number of parallel parsers]"
+    print("Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder] [-J Number of parallel parsers]")
 
 ## @brief print help
 def _help():
-    print "Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W]"
-    print "-v:\t\tVerbose"
-    print "-d:\t\tDebug (Include Verbose)"
-    print "--dryrun:\tPerforms a Dryrun (no changes)"
-    print "-W:\t\tAdd " + SIXMOZ_rules.get_conf('to_add') + " to all NS_IMETHOD (won't compile)"
-    print "-I folder:\tFolder you want to get headers generated from idl_files"
-    print "-h --help:\tPrint this Menu"
-    print "Path:\t\tFolder you want to add " + SIXMOZ_rules.get_conf('to_add')
+    print("Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W]")
+    print("-v:\t\tVerbose")
+    print("-d:\t\tDebug (Include Verbose)")
+    print("--dryrun:\tPerforms a Dryrun (no changes)")
+    print("-W:\t\tAdd %s to all NS_IMETHOD (won't compile)"% SIXMOZ_rules.get_conf('to_add'))
+    print("-I folder:\tFolder you want to get headers generated from idl_files")
+    print("-h --help:\tPrint this Menu")
+    print("Path:\t\tFolder you want to add %s"% SIXMOZ_rules.get_conf('to_add'))
 
 class SIXMOZ_options():
     @staticmethod
@@ -47,7 +47,7 @@ class SIXMOZ_options():
             sys.exit(1)
         for o, a in opts:
             if o == "-v":
-                print ("[Running Verbose Mode]")
+                print("[Running Verbose Mode]")
                 SIXMOZ_logger.set_verbose()
             elif o in ("-d"):
                 print("[Running Debug Mode]")

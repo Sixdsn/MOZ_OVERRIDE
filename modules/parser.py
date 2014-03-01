@@ -13,7 +13,7 @@ from options import SIXMOZ_options
 import parser_func
 
 def chunks(seq, n):
-    return (seq[i:i+n] for i in xrange(0, len(seq), n))
+    return (seq[i:i+n] for i in range(0, len(seq), n))
 
 class SIXMOZ_parser():
     def __init__(self, files, idl_files):
@@ -110,7 +110,7 @@ class SIXMOZ_parser():
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
-                    self.classes = dict(self.classes.items() + future.result().items())
+                    self.classes = dict(list(self.classes.items()) + list(future.result().items()))
                 except Exception as exc:
                     sys.stdout = saveout
                     print('Worker generated an exception: %s' % (exc))
@@ -139,11 +139,11 @@ def do_parse(files, nb_files):
                 SIXMOZ_logger.foo_print("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
             else:
                 SIXMOZ_logger.print_verbose("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
-        except CppHeaderParser.CppParseError,  e:
+        except CppHeaderParser.CppParseError as e:
             sys.stdout = saveout
             SIXMOZ_logger.print_error(str(e), files[id_file])
             continue
-        except Exception,  e:
+        except Exception as e:
             sys.stdout = saveout
             SIXMOZ_logger.print_error(str(e), files[id_file])
             continue
