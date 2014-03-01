@@ -2,7 +2,7 @@
 
 from files import SIXMOZ_files
 from stats import SIXMOZ_stats
-from parser import SIXMOZ_parser
+from builder import SIXMOZ_builder
 
 class SIXMOZ_override():
     def __init__(self):
@@ -10,10 +10,10 @@ class SIXMOZ_override():
         self.stats = SIXMOZ_stats()
         self.files = SIXMOZ_files.get_files()
         self.idl_files = SIXMOZ_files.get_idl_files()
-        self.parser = SIXMOZ_parser(self.files, self.idl_files)
+        self.builder = SIXMOZ_builder(self.files, self.idl_files)
 
     def run(self):
-        self.classes = self.parser.init()
+        self.classes = self.builder.init()
         self.stats.display_base(self.classes, self.files, self.idl_files)
-        self.parser.run()
+        self.builder.run()
         self.stats.display(self.classes, self.files, self.idl_files)

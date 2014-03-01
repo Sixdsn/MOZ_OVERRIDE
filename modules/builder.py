@@ -7,12 +7,12 @@ from rules import SIXMOZ_rules
 from options import SIXMOZ_options
 from writer import SIXMOZ_writer
 from options import SIXMOZ_options
-import parser_func
+import builder_func
 
 def chunks(seq, n):
     return (seq[i:i+n] for i in range(0, len(seq), n))
 
-class SIXMOZ_parser():
+class SIXMOZ_builder():
     def __init__(self, files, idl_files):
         self.classes = {}
         self.files = files
@@ -178,9 +178,9 @@ def do_parse(files, nb_files):
                 for id_func in range(len(cppHeader.classes[HeaderClass]["methods"][accessType])):
                     SIXMOZ_logger.print_debug("meth name: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"])
                     SIXMOZ_logger.print_debug("meth ret: " + cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"] \
-                                    + " => " + parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"]))
+                                    + " => " + builder_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"]))
                     SIXMOZ_logger.print_debug(cppHeader.classes[HeaderClass]["methods"][accessType][id_func])
-                    meths = parser_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"])
+                    meths = builder_func.check_ret(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["rtnType"])
                     if (len(meths)):
                         meths += " "
                     meths += cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"] + " ("
@@ -203,21 +203,21 @@ def do_parse(files, nb_files):
                         if SIXMOZ_options.achtung and ((cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD") != -1) \
                                             or (cppHeader.classes[HeaderClass]["methods"][accessType][id_func].show().find("NS_IMETHOD_") != -1)) \
                                             and ("= 0 ;" not in cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]):
-                            classes[classname]['Omeths'][len(classes[classname]['Omeths'])] = parser_func.over_meth(meths), \
-                                parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
+                            classes[classname]['Omeths'][len(classes[classname]['Omeths'])] = builder_func.over_meth(meths), \
+                                builder_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
                                 cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
                         SIXMOZ_logger.print_debug("Meths: " + meths)
-                        classes[classname]['meths'][len(classes[classname]['meths'])] = parser_func.over_meth(meths), \
-                            parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
+                        classes[classname]['meths'][len(classes[classname]['meths'])] = builder_func.over_meth(meths), \
+                            builder_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
                     else:
                         SIXMOZ_logger.print_debug("Funcs: " + meths)
-                        classes[classname]['funcs'][len(classes[classname]['funcs'])] = parser_func.over_meth(meths), \
-                            parser_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
+                        classes[classname]['funcs'][len(classes[classname]['funcs'])] = builder_func.over_meth(meths), \
+                            builder_func.over_meth(cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"]), \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["debug"], \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["line_number"], \
                             cppHeader.classes[HeaderClass]["methods"][accessType][id_func]["name"]
