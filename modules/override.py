@@ -1,15 +1,23 @@
 #!/usr/bin/python
 
-from files import SIXMOZ_files
+import concurrent.futures
+
 from stats import SIXMOZ_stats
 from builder import SIXMOZ_builder
+import files
 
 class SIXMOZ_override():
     def __init__(self):
         self.classes = []
         self.stats = SIXMOZ_stats()
-        self.files = SIXMOZ_files.get_files()
-        self.idl_files = SIXMOZ_files.get_idl_files()
+        with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+            funcs = [ files.get_files, files.get_idl_files ]
+            future_task = {executor.submit(func): func for func in funcs}
+            for future in concurrent.futures.as_completed(future_task):
+                if (future_task.keys().index(future) == 1):
+                    self.files = future.result()
+                elif (future_task.keys().index(future) == 0):
+                    self.idl_files = future.result()
         self.builder = SIXMOZ_builder(self.files, self.idl_files)
 
     def run(self):

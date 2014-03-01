@@ -130,7 +130,7 @@ def modify_file(filename, classname, line, orig):
             else:
                 content += mod
                 i += 1
-        elif (len(mod) != 0):
+        elif (len(mod) > 0):
             content += mod
             i += 1
         else:

@@ -2,6 +2,8 @@
 
 import sys, concurrent.futures, CppHeaderParser
 
+from multiprocessing import Value
+
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
 from options import SIXMOZ_options
@@ -102,8 +104,8 @@ class SIXMOZ_builder():
         self.classes = {}
         saveout = sys.stdout
         #As CppHeaderParser doesn't support multithread, wu keep only one worker
-        with concurrent.futures.ThreadPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
-            listes = list(chunks(files, int(len(files) / SIXMOZ_options.workers)))
+        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+            listes = list(chunks(files, int(len(files) / 15)))
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
@@ -114,28 +116,20 @@ class SIXMOZ_builder():
                     continue
         sys.stdout = saveout
 
-def static_var(varname, value):
-    def decorate(func):
-        setattr(func, varname, value)
-        return func
-    return decorate
-
-@static_var("file_cpt", -1)
+file_cpt = Value('i', -1)
 def do_parse(files, nb_files):
+    global file_cpt
+
     classes = {}
     accessType_tab = [ "public", "private", "protected" ]
     saveout = sys.stdout
     dev_null = open("/dev/null", 'w')
     for id_file in range(len(files)):
         try:
-            do_parse.file_cpt += 1
+            file_cpt.value += 1
             sys.stdout = dev_null
             cppHeader = CppHeaderParser.CppHeader(files[id_file])
             sys.stdout = saveout
-            if (SIXMOZ_logger.print_verbose != SIXMOZ_logger.verbose):
-                SIXMOZ_logger.foo_print("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
-            else:
-                SIXMOZ_logger.print_verbose("[" + str(do_parse.file_cpt * 100 / nb_files)  + " %] File: " + files[id_file])
         except CppHeaderParser.CppParseError as e:
             sys.stdout = saveout
             SIXMOZ_logger.print_error(str(e), files[id_file])
@@ -232,5 +226,6 @@ def do_parse(files, nb_files):
                 SIXMOZ_logger.print_debug("Meth: " + str(l)+ " " + classname + "::" + classes[classname]['meths'][l][0])
             for name in cppHeader.typedefs:
                 SIXMOZ_logger.print_debug("OTHER: " + cppHeader.typedefs[name] + " => " + name) 
+    SIXMOZ_logger.foo_print("[" + str(file_cpt.value * 100 / nb_files)  + " %]")
     dev_null.close()
     return (classes)
