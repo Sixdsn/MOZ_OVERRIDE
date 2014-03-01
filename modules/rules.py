@@ -1,10 +1,13 @@
 #!/usr/bin/python
 
-import ConfigParser
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 class SIXMOZ_rules():
 
-    config = ConfigParser.SafeConfigParser(
+    config = configparser.SafeConfigParser(
         {
             'to_find': "override",
             'to_add': "MOZ_OVERRIDE",
@@ -178,7 +181,7 @@ class SIXMOZ_rules():
     def get_conf(key):
         try:
             value = SIXMOZ_rules.config.get(SIXMOZ_rules.namespace, key)
-        except ConfigParser.Error:
+        except configparser.Error:
             print ("[DEBUG] No option '%s' found in namespace '%s'." %
                     (key, SIXMOZ_rules.namespace))
             return None

@@ -1,9 +1,6 @@
 #!/usr/bin/python
 
-import sys
-import CppHeaderParser
-
-import concurrent.futures
+import sys, concurrent.futures, CppHeaderParser
 
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
@@ -106,7 +103,7 @@ class SIXMOZ_parser():
         saveout = sys.stdout
         #As CppHeaderParser doesn't support multithread, wu keep only one worker
         with concurrent.futures.ThreadPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
-            listes = list(chunks(files, len(files) / SIXMOZ_options.workers))
+            listes = list(chunks(files, int(len(files) / SIXMOZ_options.workers)))
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
