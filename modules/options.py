@@ -7,7 +7,7 @@ from logger import SIXMOZ_logger
 
 ## @brief print usage
 def usage():
-    print "Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder]"
+    print "Usage: ./this_script Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder] [-J Number of parallel parsers]"
 
 ## @brief print help
 def _help():
@@ -31,14 +31,15 @@ class SIXMOZ_options():
             sys.exit(1)
         idl_folder = ""
         achtung = 0
+        workers = 1
         try:
-            opts, args = getopt.getopt(sys.argv[2:], "I:hvdW", ["help", "dryrun"])
+            opts, args = getopt.getopt(sys.argv[2:], "hdvWJ:I:", ["help", "dryrun"])
         except getopt.GetoptError as err:
-            print str(err)
+            print("GetOpt Error: %s"% str(err))
             usage()
             sys.exit(2)
         except:
-            print "Unknown opt Error"
+            print("Unknown opt Error")
             sys.exit(2)
 
         if (len(args)):
@@ -46,26 +47,32 @@ class SIXMOZ_options():
             sys.exit(1)
         for o, a in opts:
             if o == "-v":
-                print "[Running Verbose Mode]"
+                print ("[Running Verbose Mode]")
                 SIXMOZ_logger.set_verbose()
             elif o in ("-d"):
-                print "[Running Debug Mode]"
+                print("[Running Debug Mode]")
                 SIXMOZ_logger.set_debug()
             elif o in ("-W"):
-                print "[Running UNSAFE Mode]"
+                print("[Running UNSAFE Mode]")
                 achtung = 1
             elif o in ("-I"):
-                print "[Using Idl Folder] " + a
+                print("[Using Idl Folder] %s"% a)
                 idl_folder = a
+            elif o in ("-J"):
+                if (int(a) <= 0):
+                    usage()
+                    sys.exit(1)
+                print("[Using %d Workers]"% int(a))
+                workers = int(a)
             elif o in ("-h", "--help"):
                 _help()
-                sys.exit()
+                sys.exit(0)
             elif o in ("--dryrun"):
-                print "[Running DryRun Mode]"
+                print("[Running DryRun Mode]")
                 SIXMOZ_logger.set_dryrun()
             else:
                 print("Unhandled Option")
                 sys.exit(1)
-        return (sys.argv[1], idl_folder, achtung)
+        return (sys.argv[1], idl_folder, achtung, workers)
 
-    path, idl_folder, achtung = check_options()
+    path, idl_folder, achtung, workers = check_options()
