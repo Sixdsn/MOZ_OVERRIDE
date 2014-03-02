@@ -44,7 +44,6 @@ class SIXMOZ_builder():
 
     def run(self):
         SIXMOZ_logger.print_info("Stage */6: Managing Typedef's")
-
         local_classes = {}
         chunk_size = 50
         if (chunk_size > len(self.classes)):
