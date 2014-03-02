@@ -2,7 +2,8 @@
 
 import sys, concurrent.futures, CppHeaderParser
 
-from multiprocessing import Value
+from multiprocessing import Value, Manager
+from itertools import izip
 
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
@@ -14,7 +15,23 @@ import builder_func
 def chunks(seq, n):
     return (seq[i:i+n] for i in range(0, len(seq), n))
 
+def dict_chunks(seq, n):
+    if len(seq) == 0:
+        out = iter([])
+    else:
+        keys, vals = izip(*seq.iteritems())
+        out = (
+            dict((keys[ii], vals[ii]) for ii in xrange(i, i + n)
+                 if ii < len(seq))
+            for i in xrange(0, len(seq), n)
+        )
+    return(out)
+
+class_cpt = Value('i', -1)
+file_cpt = Value('i', -1)
+
 class SIXMOZ_builder():
+    rlock = Manager().RLock()
     def __init__(self, files, idl_files):
         self.classes = {}
         self.files = files
@@ -23,25 +40,30 @@ class SIXMOZ_builder():
 
     def init(self):
         self.parse_header_files()
-        self.writer = SIXMOZ_writer(self.classes)
         return (self.classes)
 
     def run(self):
-        self.manage_typedefs()
+        SIXMOZ_logger.print_info("Stage */6: Managing Typedef's")
+
+        local_classes = {}
+        chunk_size = 50
+        if (chunk_size > len(self.classes)):
+            chunk_size = int(len(self.classes) / SIXMOZ_options.workers)
+        listes = list(dict_chunks(self.classes, int(len(self.classes) / chunk_size)))
+        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+            future_task = {executor.submit(manage_typedefs, self.classes, liste): liste for liste in listes}
+            for future in concurrent.futures.as_completed(future_task):
+                try:
+                    local_classes.update(future.result())
+                except Exception as exc:
+                    print('Worker generated an exception: %s' % (exc))
+                    continue
+        self.classes = local_classes
+        print("")
+        self.writer = SIXMOZ_writer(self.classes)
         self.add_full_heritage()
         self.find_override()
         self.writer.run()
-
-    def manage_typedefs(self):
-        SIXMOZ_logger.print_info("Stage */6: Managing Typedef's")
-        for classname in self.classes:
-            for name in self.classes[classname]['typedefs']:
-                for nclassname in self.classes:
-                    for inh in self.classes[nclassname]['inherits']:
-                        if inh == name and self.classes[classname]['typedefs'][name] not in self.classes[nclassname]['inherits']:
-                            self.classes[nclassname]['inherits'].append(self.classes[classname]['typedefs'][name])
-                            SIXMOZ_logger.print_debug(classname + " typedef inherits: " + self.classes[classname]['typedefs'][name])
-                            break
 
     ## @brief creates the heritage tree for all methods
     ## @param self.classes dict of all self.classes
@@ -91,6 +113,7 @@ class SIXMOZ_builder():
                     if (simple_inherits in self.classes):
                         for hidden_inherits in self.classes[simple_inherits]['inherits']:
                             if (hidden_inherits in self.classes and hidden_inherits not in self.classes[classname]['inherits'] and hidden_inherits != classname):
+                                SIXMOZ_logger.print_debug("Class: " + classname + " inherits " + simple_inherits)
                                 add.add(hidden_inherits)
                                 change = 1
                             else:
@@ -103,20 +126,38 @@ class SIXMOZ_builder():
         files = self.files + self.idl_files
         self.classes = {}
         saveout = sys.stdout
-        #As CppHeaderParser doesn't support multithread, wu keep only one worker
-        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
-            listes = list(chunks(files, int(len(files) / 15)))
+        chunk_size = 50
+        if (chunk_size > len(files)):
+            chunk_size = int(len(files) / SIXMOZ_options.workers)
+        listes = list(chunks(files, int(len(files) / chunk_size)))
+        #with RLock more than 2 workers looses time...
+        with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
+#        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
-                    self.classes = dict(list(self.classes.items()) + list(future.result().items()))
+                    self.classes.update(future.result())
                 except Exception as exc:
                     sys.stdout = saveout
                     print('Worker generated an exception: %s' % (exc))
                     continue
         sys.stdout = saveout
 
-file_cpt = Value('i', -1)
+def manage_typedefs(all_classes, liste):
+    global class_cpt
+
+    for classname in all_classes:
+        for name in all_classes[classname]['typedefs']:
+            for nclassname in liste:
+                for inh in liste[nclassname]['inherits']:
+                    if inh == name and all_classes[classname]['typedefs'][name] not in all_classes[nclassname]['inherits']:
+                        liste[nclassname]['inherits'].append(all_classes[classname]['typedefs'][name])
+                        SIXMOZ_logger.print_debug(classname + " typedef inherits: " + all_classes[classname]['typedefs'][name])
+                        break
+    class_cpt.value += len(liste)
+    SIXMOZ_logger.foo_print("[" + str(class_cpt.value * 100 / len(all_classes))  + " %]")
+    return (liste)
+
 def do_parse(files, nb_files):
     global file_cpt
 
@@ -128,7 +169,8 @@ def do_parse(files, nb_files):
         try:
             file_cpt.value += 1
             sys.stdout = dev_null
-            cppHeader = CppHeaderParser.CppHeader(files[id_file])
+            with SIXMOZ_builder.rlock:
+                cppHeader = CppHeaderParser.CppHeader(files[id_file])
             sys.stdout = saveout
         except CppHeaderParser.CppParseError as e:
             sys.stdout = saveout

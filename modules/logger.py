@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import threading
 import sys
+from multiprocessing import Manager
 
 class SIXMOZ_logger():
 
-    rlock = threading.RLock()
+    rlock = Manager().RLock()
 
     @staticmethod
     def __my_print(bar):

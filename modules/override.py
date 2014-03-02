@@ -11,13 +11,10 @@ class SIXMOZ_override():
         self.classes = []
         self.stats = SIXMOZ_stats()
         with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
-            funcs = [ files.get_files, files.get_idl_files ]
-            future_task = {executor.submit(func): func for func in funcs}
-            for future in concurrent.futures.as_completed(future_task):
-                if (future_task.keys().index(future) == 1):
-                    self.files = future.result()
-                elif (future_task.keys().index(future) == 0):
-                    self.idl_files = future.result()
+            future_files = executor.submit(files.get_files)
+            future_idl_files = executor.submit(files.get_idl_files)
+            self.files = future_files.result()
+            self.idl_files = future_idl_files.result()
         self.builder = SIXMOZ_builder(self.files, self.idl_files)
 
     def run(self):

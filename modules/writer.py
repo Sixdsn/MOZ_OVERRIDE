@@ -97,7 +97,7 @@ def find_meth(liste, i, content):
             content += mod
         if (i >= len(liste)):
             ok = 0
-    return (i, mod, content, found)
+    return (i, mod, str(content), found)
 
 ## @brief open each needed file to modify it
 ## @param filename string
