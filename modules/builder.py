@@ -2,7 +2,7 @@
 
 import sys, concurrent.futures, CppHeaderParser
 
-from multiprocessing import Value, Manager
+from multiprocessing import Value
 
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
@@ -30,7 +30,6 @@ class_cpt = Value('i', -1)
 file_cpt = Value('i', -1)
 
 class SIXMOZ_builder():
-    rlock = Manager().RLock()
     def __init__(self, files, idl_files):
         self.classes = {}
         self.files = files
@@ -48,7 +47,9 @@ class SIXMOZ_builder():
         if (chunk_size > len(self.classes)):
             chunk_size = int(len(self.classes) / SIXMOZ_options.workers)
         listes = list(dict_chunks(self.classes, int(len(self.classes) / chunk_size)))
-        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+        #depends on issue #19 need to reduce memory usage
+        #        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=1) as executor:
             future_task = {executor.submit(manage_typedefs, self.classes, liste): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
@@ -128,9 +129,7 @@ class SIXMOZ_builder():
         if (chunk_size > len(files)):
             chunk_size = int(len(files) / SIXMOZ_options.workers)
         listes = list(chunks(files, int(len(files) / chunk_size)))
-        #with RLock more than 2 workers looses time...
-        with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
-#        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
             for future in concurrent.futures.as_completed(future_task):
                 try:
@@ -167,8 +166,7 @@ def do_parse(files, nb_files):
         try:
             file_cpt.value += 1
             sys.stdout = dev_null
-            with SIXMOZ_builder.rlock:
-                cppHeader = CppHeaderParser.CppHeader(files[id_file])
+            cppHeader = CppHeaderParser.CppHeader(files[id_file])
             sys.stdout = saveout
         except CppHeaderParser.CppParseError as e:
             sys.stdout = saveout
