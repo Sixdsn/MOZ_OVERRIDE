@@ -18,7 +18,7 @@ class SIXMOZ_logger():
 
     @staticmethod
     def __write_file(filename, content):
-        fd = file(filename, "w")
+        fd = open(filename, "w")
         fd.write(content)
         fd.close()
 

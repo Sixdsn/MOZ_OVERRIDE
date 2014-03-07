@@ -3,7 +3,6 @@
 import sys, concurrent.futures, CppHeaderParser
 
 from multiprocessing import Value, Manager
-from itertools import izip
 
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
@@ -19,11 +18,11 @@ def dict_chunks(seq, n):
     if len(seq) == 0:
         out = iter([])
     else:
-        keys, vals = izip(*seq.iteritems())
+        keys, vals = zip(*seq.items())
         out = (
-            dict((keys[ii], vals[ii]) for ii in xrange(i, i + n)
+            dict((keys[ii], vals[ii]) for ii in range(i, i + n)
                  if ii < len(seq))
-            for i in xrange(0, len(seq), n)
+            for i in range(0, len(seq), n)
         )
     return(out)
 
@@ -154,7 +153,7 @@ def manage_typedefs(all_classes, liste):
                         SIXMOZ_logger.print_debug(classname + " typedef inherits: " + all_classes[classname]['typedefs'][name])
                         break
     class_cpt.value += len(liste)
-    SIXMOZ_logger.foo_print("[" + str(class_cpt.value * 100 / len(all_classes))  + " %]")
+    SIXMOZ_logger.foo_print("[%d%%]"% int(class_cpt.value * 100 / len(all_classes)))
     return (liste)
 
 def do_parse(files, nb_files):
@@ -267,6 +266,6 @@ def do_parse(files, nb_files):
                 SIXMOZ_logger.print_debug("Meth: " + str(l)+ " " + classname + "::" + classes[classname]['meths'][l][0])
             for name in cppHeader.typedefs:
                 SIXMOZ_logger.print_debug("OTHER: " + cppHeader.typedefs[name] + " => " + name) 
-    SIXMOZ_logger.foo_print("[" + str(file_cpt.value * 100 / nb_files)  + " %]")
+    SIXMOZ_logger.foo_print("[%d%%]"% int(file_cpt.value * 100 / nb_files))
     dev_null.close()
     return (classes)

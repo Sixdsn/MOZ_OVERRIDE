@@ -110,7 +110,7 @@ def modify_file(filename, classname, line, orig):
     if orig.find(SIXMOZ_rules.get_conf('to_add')) != -1 or orig.find(SIXMOZ_rules.get_conf('to_find')) != -1:
         SIXMOZ_stats.overrided.append(classname + "::" + orig)
         return
-    liste = file(filename, "r").readlines()
+    liste = open(filename, "r").readlines()
     i = 0
     content = ""
     modified = 0
@@ -148,7 +148,7 @@ def add_attributes():
     SIXMOZ_logger.print_info("Stage 6/6: Adding Attributes.h")
     for filename in SIXMOZ_stats.mod_files:
         if (filename[-4:] != ".cpp"):
-            liste = file(filename, "r").readlines()
+            liste = open(filename, "r").readlines()
             first = 0
             for li in liste:
                 if (li.find("Attributes.h") != -1 and li.find("#include ") != -1):
@@ -168,13 +168,13 @@ def add_attributes():
 ## @returns void
 def sanity_check():
     for filename in SIXMOZ_stats.mod_files:
-        liste = file(filename, "r").readlines()
+        liste = open(filename, "r").readlines()
         content = ""
         for li in liste:
             content += li
         content += '\n#if !defined(MOZ_HAVE_CXX11_OVERRIDE)\n \
 #warning "MOZ_OVERRIDE Undefined"\n \
 #endif\n'
-        fd = file(filename, "w")
+        fd = open(filename, "a")
         fd.write(content)
         fd.close()
