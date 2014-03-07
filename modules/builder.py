@@ -46,6 +46,8 @@ class SIXMOZ_builder():
         chunk_size = 50
         if (chunk_size > len(self.classes)):
             chunk_size = int(len(self.classes) / SIXMOZ_options.workers)
+        if (chunk_size == 0):
+            chunk_size = 1
         listes = list(dict_chunks(self.classes, int(len(self.classes) / chunk_size)))
         #depends on issue #19 need to reduce memory usage
         #        with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
@@ -128,6 +130,8 @@ class SIXMOZ_builder():
         chunk_size = 50
         if (chunk_size > len(files)):
             chunk_size = int(len(files) / SIXMOZ_options.workers)
+        if (chunk_size == 0):
+            chunk_size = 1
         listes = list(chunks(files, int(len(files) / chunk_size)))
         with concurrent.futures.ProcessPoolExecutor(max_workers=SIXMOZ_options.workers) as executor:
             future_task = {executor.submit(do_parse, liste, len(files)): liste for liste in listes}
