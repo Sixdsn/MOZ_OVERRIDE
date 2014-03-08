@@ -39,15 +39,20 @@ Usage:
 `./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-J Workers] [-I header_from_idl_folder]`
 
 > Path		  => Path to the files you want to add MOZ_OVERRIDE
+
 > -v 		  => Verbose Mode
+
 > -d 		  => Debug Mode
+
 > --dryrun	  => Doesn't modify files, only simulation
+
 > -h		  => Obvious
+
 > -W		  => Shouldn't be used, unsafe
-> -J      => Number of parallel workers used to parse and generate the database 
-              (be carreful, it's using processes so memory usage is very important)
-> -I idl_folder  => Another path to parse files but thoses won't be modified
->      		     very usefull if some of your classes in Path included files that aren't in the same folder
+
+> -J      => Number of parallel workers used to parse and generate the database (be carreful, it's using processes so memory usage is very important)
+
+> -I idl_folder  => Another path to parse files but thoses won't be modified very usefull if some of your classes in Path included files that aren't in the same folder
 
 To get the best results, do this:
 
