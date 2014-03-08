@@ -15,7 +15,7 @@ $>pip install cppheaderparser
 MOZ_OVERRIDE is a script I developped for Mozilla
 wich recreates the whole heritage tree for all classes in mozilla-central.
 
-Of course it can be used anywhere, but is designed ofr mozilla.
+Of course it can be used anywhere, but is designed for mozilla.
 The wiki will be updated soon to show how to adapt it to another behaviour.
 
 It finds classes that inherits from a base class
@@ -36,7 +36,7 @@ Used in Bugs:
 
 Usage:
 
-`./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-I header_from_idl_folder]`
+`./main.py Path [-v|-d] [--dryrun] [-h|--help] [-W] [-J Workers] [-I header_from_idl_folder]`
 
 > Path		  => Path to the files you want to add MOZ_OVERRIDE
 > -v 		  => Verbose Mode
@@ -44,6 +44,8 @@ Usage:
 > --dryrun	  => Doesn't modify files, only simulation
 > -h		  => Obvious
 > -W		  => Shouldn't be used, unsafe
+> -J      => Number of parallel workers used to parse and generate the database 
+              (be carreful, it's using processes so memory usage is very important)
 > -I idl_folder  => Another path to parse files but thoses won't be modified
 >      		     very usefull if some of your classes in Path included files that aren't in the same folder
 
