@@ -21,9 +21,9 @@ class SIXMOZ_stats():
         tot_meths = 0
         tot_mems = 0
 
-        for i in classes:
-            tot_meths += len(classes[i]['funcs'])
-            tot_mems += len(classes[i]['meths'])
+        for cppclass in classes:
+            tot_meths += len(cppclass.funcs)
+            tot_mems += len(cppclass.meths)
         print("")
         SIXMOZ_logger.print_verbose("Got %d File Issues" % len(SIXMOZ_logger.file_issue))
         for f in SIXMOZ_logger.file_issue:
@@ -41,25 +41,25 @@ class SIXMOZ_stats():
 
         SIXMOZ_logger.print_verbose("")
         SIXMOZ_logger.print_verbose("Statistics")
-        for classname in classes:
-            for k in classes[classname]['Omeths']:
-                tmp = classname + "::" +  classes[classname]['Omeths'][k][2]
+        for cppclass in classes:
+            for classOmeths  in cppclass.Omeths:
+                tmp = cppclass.name + "::" +  classOmeths[2]
                 if tmp not in self.overrided:
                     if firstprint == 0:
                         firstprint = 1
                         SIXMOZ_logger.print_verbose("NOT OVERRIDED!!!:")
                     virt_missed += 1
-                    SIXMOZ_logger.print_verbose(classes[classname]["filename"] + "\t" \
-                                  + "M " + tmp + "\t%d" % classes[classname]['Omeths'][k][3])
-            for k in classes[classname]['Ofuncs']:
-                tmp = classname + "::" + classes[classname]['Ofuncs'][k][2]
+                    SIXMOZ_logger.print_verbose(cppclass.filename + "\t" \
+                                  + "M " + tmp + "\t%d" % classOmeths[3])
+            for classOfuncs in cppclass.Ofuncs:
+                tmp = cppclass.name + "::" + classOfuncs[2]
                 if tmp not in self.overrided:
                     if firstprint == 0:
                         firstprint = 1
                         SIXMOZ_logger.print_verbose("NOT OVERRIDED!!!:")
                     meth_missed += 1
-                    SIXMOZ_logger.print_verbose(classes[classname]["filename"] + "\t" \
-                                  + "F " + tmp + "\t%d" % classes[classname]['Ofuncs'][k][3])
+                    SIXMOZ_logger.print_verbose(cppclass.filename + "\t" \
+                                  + "F " + tmp + "\t%d" % classOfuncs[3])
 
         self.display_base(classes, files, idl_files)
         SIXMOZ_logger.print_verbose("Methods " + SIXMOZ_rules.get_conf('to_add') + " @Begin: " + self.begin)
@@ -73,21 +73,21 @@ class SIXMOZ_stats():
                                          SIXMOZ_rules.get_conf('to_add') + " | wc -l", shell=True).decode()
         SIXMOZ_logger.print_info(SIXMOZ_rules.get_conf('to_add') + " Methods in Code: " + output)
 
-def display_class(classe, classname):
-    SIXMOZ_logger.print_verbose("File: " + classe['filename'])
-    SIXMOZ_logger.print_verbose("Class: " + classname)
-    for j in range(len(classe['inherits'])):
-        SIXMOZ_logger.print_verbose("From: " + classe['inherits'][j])
-    SIXMOZ_logger.print_verbose("Func: %d"% len(classe['funcs']))
-    for i in classe['funcs']:
-        SIXMOZ_logger.print_verbose(classname + ": " + classe['funcs'][i][0] + " | " + classe['funcs'][i][2])
-    SIXMOZ_logger.print_verbose("Meths: %d"% len(classe['meths']))
-    for i in classe['meths']:
-        SIXMOZ_logger.print_verbose(classname + ": " + classe['meths'][i][0] + " | " + classe['meths'][i][2])
-    SIXMOZ_logger.print_verbose("Overrided Func: %d"% len(classe['Ofuncs']))
-    for i in classe['Ofuncs']:
-        SIXMOZ_logger.print_verbose(classname + ": " + classe['Ofuncs'][i][0])
-    SIXMOZ_logger.print_verbose("Overrided Meths: %d"% len(classe['Omeths']))
-    for i in classe['Omeths']:
-        SIXMOZ_logger.print_verbose(classname + ": " + classe['Omeths'][i][0])
+def display_class(classe):
+    SIXMOZ_logger.print_verbose("File: " + classe.filename)
+    SIXMOZ_logger.print_verbose("Class: " + classe.name)
+    for inherit in classe.inherits:
+        SIXMOZ_logger.print_verbose("From: " + inherit)
+    SIXMOZ_logger.print_verbose("Func: %d"% len(classe.funcs))
+    for i in classe.funcs:
+        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.funcs[i][0] + " | " + classe.funcs[i][2])
+    SIXMOZ_logger.print_verbose("Meths: %d"% len(classe.meths))
+    for i in classe.meths:
+        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.meths[i][0] + " | " + classe.meths[i][2])
+    SIXMOZ_logger.print_verbose("Overrided Func: %d"% len(classe.Ofuncs))
+    for i in classe.Ofuncs:
+        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.Ofuncs[i][0])
+    SIXMOZ_logger.print_verbose("Overrided Meths: %d"% len(classe.Omeths))
+    for i in classe.Omeths:
+        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.Omeths[i][0])
     SIXMOZ_logger.print_verbose("")

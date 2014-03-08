@@ -16,11 +16,11 @@ class SIXMOZ_writer():
 
     def add_moz_override(self):
         SIXMOZ_logger.print_info("Stage 5/6: Adding " + SIXMOZ_rules.get_conf('to_add') + " to files")
-        for classname in self.classes:
-            for k in self.classes[classname]['Omeths']:
-                modify_file(self.classes[classname]['filename'], classname, self.classes[classname]['Omeths'][k][3], self.classes[classname]['Omeths'][k][2])
-            for k in self.classes[classname]['Ofuncs']:
-                modify_file(self.classes[classname]['filename'], classname, self.classes[classname]['Ofuncs'][k][3], self.classes[classname]['Ofuncs'][k][2])
+        for cppclass in self.classes:
+            for classOmeths in cppclass.Omeths:
+                modify_file(cppclass.filename, cppclass.name, classOmeths[3], classOmeths[2])
+            for classOfuncs in cppclass.Ofuncs:
+                modify_file(cppclass.filename, cppclass.name, classOfuncs[3], classOfuncs[2])
 
 def fuck_meth(line, endlit, pareit):
     while (endlit > pareit + 1 and not line[endlit].isalpha()):
