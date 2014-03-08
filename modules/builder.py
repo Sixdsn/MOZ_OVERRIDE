@@ -30,6 +30,9 @@ class SIXMOZ_builder():
         self.parse_header_files()
         return (self.classes)
 
+    def get_classes(self):
+        return self.classes
+
     def run(self):
         SIXMOZ_logger.print_info("Stage */6: Managing Typedef's")
         local_classes = []
@@ -90,7 +93,7 @@ class SIXMOZ_builder():
                             SIXMOZ_logger.print_debug("2: " + inherit.name + "::" + inhmeths[0] \
                                             + " " + cppclass.name + "::" + classfuncs[0])
                             if inhmeths[0] == classfuncs[0]:
-                                cppclass.Ofuncs.append(classfuncs)
+                                cppclass.Ofuncs.append(classfuncs + [ inherit.name ])
                                 SIXMOZ_logger.print_debug("OVERRIDE2: " + inherit.name + "::" + inhmeths[2] \
                                                 + " and " + cppclass.name + "::" + classfuncs[2])
                                 break
@@ -98,7 +101,7 @@ class SIXMOZ_builder():
                             SIXMOZ_logger.print_debug("3: " + inherit.name + "::" + inhmeths[0] \
                                             + " " + cppclass.name + "::" + classmeths[0])
                             if inhmeths[0] == classmeths[0]:
-                                cppclass.Omeths.append(classmeths)
+                                cppclass.Omeths.append(classmeths + [ inherit.name ])
                                 SIXMOZ_logger.print_debug("OVERRIDE3: " + inherit.name + "::" + inhmeths[2] \
                                                 + " line [" + str(inhmeths[3]) + "]" \
                                                 + " and " + cppclass.name + "::" + classmeths[2] + " line [" + str(classmeths[3]) + "]")

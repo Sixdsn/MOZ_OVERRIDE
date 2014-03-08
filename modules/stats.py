@@ -86,8 +86,8 @@ def display_class(classe):
         SIXMOZ_logger.print_debug(classe.name + ": " + classmeths[0] + " | " + classmeths[2])
     SIXMOZ_logger.print_debug("Overrided Func: %d"% len(classe.Ofuncs))
     for classOfuncs in classe.Ofuncs:
-        SIXMOZ_logger.print_debug(classe.name + ": " + classOfuncs[0])
+        SIXMOZ_logger.print_debug(classe.name + ": " + classOfuncs[0] + " from: "+ classOfuncs[5])
     SIXMOZ_logger.print_debug("Overrided Meths: %d"% len(classe.Omeths))
     for classOmeths in classe.Omeths:
-        SIXMOZ_logger.print_debug(classe.name + ": " + classOmeths[0])
+        SIXMOZ_logger.print_debug(classe.name + ": " + classOmeths[0] + " from: "+ classOmeths[5])
     SIXMOZ_logger.print_debug("")
