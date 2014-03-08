@@ -8,8 +8,9 @@ from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
 from options import SIXMOZ_options
 from writer import SIXMOZ_writer
-from options import SIXMOZ_options
 from files import SIXMOZ_files
+
+import stats
 import builder_func
 
 def chunks(seq, n):
@@ -149,21 +150,6 @@ class SIXMOZ_builder():
                     continue
         sys.stdout = saveout
 
-def manage_typedefs(all_classes, liste):
-    global class_cpt
-
-    for cppclass in all_classes:
-        for name in cppclass.typedefs:
-            for ncppclass in liste:
-                for inh in ncppclass.inherits:
-                    if inh == name and cppclass.typedefs[name] not in ncppclass.inherits and cppclass.typedefs[name] != cppclass.name:
-                        ncppclass.inherits.append(cppclass.typedefs[name])
-                        SIXMOZ_logger.print_debug(cppclass.name + " typedef inherits: " + cppclass.typedefs[name])
-                        break
-    class_cpt.value += len(liste)
-    SIXMOZ_logger.foo_print("[%d%%]"% int(class_cpt.value * 100 / len(all_classes)))
-    return (liste)
-
 class CppClass():
     def __init__(self, filename):
         self.name = ""
@@ -199,8 +185,20 @@ class CppClass():
     def append_func(self, func):
         self.funcs.append(func)
 
-def parse_filesix(filename, saveout, dev_null):
-    pass
+def manage_typedefs(all_classes, liste):
+    global class_cpt
+
+    for cppclass in all_classes:
+        for name in cppclass.typedefs:
+            for ncppclass in liste:
+                for inh in ncppclass.inherits:
+                    if inh == name and cppclass.typedefs[name] not in ncppclass.inherits and cppclass.typedefs[name] != cppclass.name:
+                        ncppclass.inherits.append(cppclass.typedefs[name])
+                        SIXMOZ_logger.print_debug(cppclass.name + " typedef inherits: " + cppclass.typedefs[name])
+                        break
+    class_cpt.value += len(liste)
+    SIXMOZ_logger.foo_print("[%d%%]"% int(class_cpt.value * 100 / len(all_classes)))
+    return (liste)
 
 def build_meth(typeid_func):
     SIXMOZ_logger.print_debug("meth name: " + typeid_func["name"])
@@ -226,11 +224,51 @@ def build_meth(typeid_func):
         meths += " const"
     return (meths)
 
+def gen_class(filename, cppHeader, HeaderClass):
+    accessType_tab = [ "public", "private", "protected" ]
+
+    headerclass = cppHeader.classes[HeaderClass]
+    cppclass = CppClass(filename)
+    cppclass.set_name(headerclass)
+    cppclass.set_inherits(headerclass)
+    for accessType in accessType_tab:
+        for typeid_func in headerclass["methods"][accessType]:
+            meths = build_meth(typeid_func)
+            if (typeid_func.show().find("virtual") != -1) \
+               or (typeid_func.show().find("NS_IMETHOD") != -1) \
+               or (typeid_func.show().find("NS_IMETHOD_") != -1):
+                if SIXMOZ_options.achtung and ((typeid_func.show().find("NS_IMETHOD") != -1) \
+                                               or (typeid_func.show().find("NS_IMETHOD_") != -1)) \
+                    and ("= 0 ;" not in typeid_func["debug"]):
+                    cppclass.append_ometh([builder_func.over_meth(meths), \
+                                           builder_func.over_meth(typeid_func["debug"]), \
+                                           typeid_func["debug"], \
+                                           typeid_func["line_number"], \
+                                           typeid_func["name"]])
+                SIXMOZ_logger.print_debug("Meths: " + meths)
+                cppclass.append_meth([builder_func.over_meth(meths), \
+                                      builder_func.over_meth(typeid_func["debug"]), \
+                                      typeid_func["debug"], \
+                                      typeid_func["line_number"], \
+                                      typeid_func["name"]])
+            else:
+                SIXMOZ_logger.print_debug("Funcs: " + meths)
+                cppclass.append_func([builder_func.over_meth(meths), \
+                                      builder_func.over_meth(typeid_func["debug"]), \
+                                      typeid_func["debug"], \
+                                      typeid_func["line_number"], \
+                                      typeid_func["name"]])
+            SIXMOZ_logger.print_debug("%s: Funcs(%d) Meths(%d)"% (cppclass.name, len(cppclass.funcs), len(cppclass.meths)))
+    cppclass.nested_typedefs = headerclass._public_typedefs
+    cppclass.typedefs = cppHeader.typedefs
+    #Only for debug
+    #stats.display_class(cppclass)
+    return (cppclass)
+
 def do_parse(files, nb_files):
     global file_cpt
 
     classes = []
-    accessType_tab = [ "public", "private", "protected" ]
     saveout = sys.stdout
     dev_null = open("/dev/null", 'w')
     for filename in files:
@@ -254,48 +292,7 @@ def do_parse(files, nb_files):
             SIXMOZ_logger.print_debug("NB CLASSES: " + str(len(cppHeader.classes)))
             SIXMOZ_logger.print_debug(cppHeader.classes)
         for HeaderClass in cppHeader.classes:
-            cppclass = CppClass(filename)
-            cppclass.set_name(cppHeader.classes[HeaderClass])
-            cppclass.set_inherits(cppHeader.classes[HeaderClass])
-            for accessType in accessType_tab:
-                for typeid_func in cppHeader.classes[HeaderClass]["methods"][accessType]:
-                    meths = build_meth(typeid_func)
-                    if (typeid_func.show().find("virtual") != -1) \
-                            or (typeid_func.show().find("NS_IMETHOD") != -1) \
-                            or (typeid_func.show().find("NS_IMETHOD_") != -1):
-                        if SIXMOZ_options.achtung and ((typeid_func.show().find("NS_IMETHOD") != -1) \
-                                            or (typeid_func.show().find("NS_IMETHOD_") != -1)) \
-                                            and ("= 0 ;" not in typeid_func["debug"]):
-                                cppclass.append_ometh([builder_func.over_meth(meths), \
-                                                       builder_func.over_meth(typeid_func["debug"]), \
-                                                       typeid_func["debug"], \
-                                                       typeid_func["line_number"], \
-                                                       typeid_func["name"]])
-                        SIXMOZ_logger.print_debug("Meths: " + meths)
-                        cppclass.append_meth([builder_func.over_meth(meths), \
-                                              builder_func.over_meth(typeid_func["debug"]), \
-                                              typeid_func["debug"], \
-                                              typeid_func["line_number"], \
-                                              typeid_func["name"]])
-                    else:
-                        SIXMOZ_logger.print_debug("Funcs: " + meths)
-                        cppclass.append_func([builder_func.over_meth(meths), \
-                                              builder_func.over_meth(typeid_func["debug"]), \
-                                              typeid_func["debug"], \
-                                              typeid_func["line_number"], \
-                                              typeid_func["name"]])
-                    SIXMOZ_logger.print_debug("%s: Funcs(%d) Meths(%d)"% (cppclass.name, len(cppclass.funcs), len(cppclass.meths)))
-            cppclass.nested_typedefs = cppHeader.classes[HeaderClass]._public_typedefs
-            cppclass.typedefs = cppHeader.typedefs
-            for name in cppHeader.classes[HeaderClass]._public_typedefs:
-                SIXMOZ_logger.print_debug("standard: " + cppHeader.classes[HeaderClass]._public_typedefs[name] + " => " + name)
-            for l in cppclass.funcs:
-                SIXMOZ_logger.print_debug("Func: " + str(l)+ " " + cppclass.name + "::" + l[0])
-            for l in cppclass.meths:
-                SIXMOZ_logger.print_debug("Meth: " + str(l)+ " " + cppclass.name + "::" + l[0])
-            for name in cppHeader.typedefs:
-                SIXMOZ_logger.print_debug("OTHER: " + cppHeader.typedefs[name] + " => " + name) 
-            classes.append(cppclass)
+            classes.append(gen_class(filename, cppHeader, HeaderClass))
     SIXMOZ_logger.foo_print("[%d%%]"% int(file_cpt.value * 100 / nb_files))
     dev_null.close()
     return (classes)

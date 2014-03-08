@@ -74,20 +74,20 @@ class SIXMOZ_stats():
         SIXMOZ_logger.print_info(SIXMOZ_rules.get_conf('to_add') + " Methods in Code: " + output)
 
 def display_class(classe):
-    SIXMOZ_logger.print_verbose("File: " + classe.filename)
-    SIXMOZ_logger.print_verbose("Class: " + classe.name)
+    SIXMOZ_logger.print_debug("File: " + classe.filename)
+    SIXMOZ_logger.print_debug("Class: " + classe.name)
     for inherit in classe.inherits:
-        SIXMOZ_logger.print_verbose("From: " + inherit)
-    SIXMOZ_logger.print_verbose("Func: %d"% len(classe.funcs))
-    for i in classe.funcs:
-        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.funcs[i][0] + " | " + classe.funcs[i][2])
-    SIXMOZ_logger.print_verbose("Meths: %d"% len(classe.meths))
-    for i in classe.meths:
-        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.meths[i][0] + " | " + classe.meths[i][2])
-    SIXMOZ_logger.print_verbose("Overrided Func: %d"% len(classe.Ofuncs))
-    for i in classe.Ofuncs:
-        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.Ofuncs[i][0])
-    SIXMOZ_logger.print_verbose("Overrided Meths: %d"% len(classe.Omeths))
-    for i in classe.Omeths:
-        SIXMOZ_logger.print_verbose(classe.name + ": " + classe.Omeths[i][0])
-    SIXMOZ_logger.print_verbose("")
+        SIXMOZ_logger.print_debug("From: " + inherit)
+    SIXMOZ_logger.print_debug("Func: %d"% len(classe.funcs))
+    for classfuncs in classe.funcs:
+        SIXMOZ_logger.print_debug(classe.name + ": " + classfuncs[0] + " | " + classfuncs[2])
+    SIXMOZ_logger.print_debug("Meths: %d"% len(classe.meths))
+    for classmeths in classe.meths:
+        SIXMOZ_logger.print_debug(classe.name + ": " + classmeths[0] + " | " + classmeths[2])
+    SIXMOZ_logger.print_debug("Overrided Func: %d"% len(classe.Ofuncs))
+    for classOfuncs in classe.Ofuncs:
+        SIXMOZ_logger.print_debug(classe.name + ": " + classOfuncs[0])
+    SIXMOZ_logger.print_debug("Overrided Meths: %d"% len(classe.Omeths))
+    for classOmeths in classe.Omeths:
+        SIXMOZ_logger.print_debug(classe.name + ": " + classOmeths[0])
+    SIXMOZ_logger.print_debug("")
