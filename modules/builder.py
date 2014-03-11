@@ -2,7 +2,7 @@
 
 import sys, concurrent.futures, CppHeaderParser
 
-from multiprocessing import Value
+from multiprocessing import Value, Manager
 
 from logger import SIXMOZ_logger
 from rules import SIXMOZ_rules
@@ -18,6 +18,7 @@ def chunks(seq, n):
 
 class_cpt = Value('i', -1)
 file_cpt = Value('i', -1)
+typedefs = Manager().list()
 
 class SIXMOZ_builder():
     def __init__(self, files, idl_files):
@@ -163,8 +164,6 @@ class CppClass():
         self.meths = []
         self.Ofuncs = []
         self.Omeths = []
-        self.nested_typedefs = {}
-        self.typedefs = {}
 
     def set_name(self, classe):
         if len(classe["namespace"]):
@@ -190,15 +189,15 @@ class CppClass():
 
 def manage_typedefs(all_classes, liste):
     global class_cpt
+    global typedefs
 
-    for cppclass in all_classes:
-        for name in cppclass.typedefs:
-            for ncppclass in liste:
-                for inh in ncppclass.inherits:
-                    if inh == name and cppclass.typedefs[name] not in ncppclass.inherits and cppclass.typedefs[name] != cppclass.name:
-                        ncppclass.inherits.append(cppclass.typedefs[name])
-                        SIXMOZ_logger.print_debug(cppclass.name + " typedef inherits: " + cppclass.typedefs[name])
-                        break
+    for name in typedefs:
+        for cppclass in liste:
+            for inh in cppclass.inherits:
+                if inh == name[0] and name[1] not in cppclass.inherits and name[1] != cppclass.name:
+                    cppclass.inherits.append(name[1])
+                    SIXMOZ_logger.print_debug(cppclass.name + " typedef inherits: " + name[1])
+                    break
     class_cpt.value += len(liste)
     SIXMOZ_logger.foo_print("[%d%%]"% int(class_cpt.value * 100 / len(all_classes)))
     return (liste)
@@ -228,8 +227,9 @@ def build_meth(typeid_func):
     return (meths)
 
 def gen_class(filename, cppHeader, HeaderClass):
-    accessType_tab = [ "public", "private", "protected" ]
+    global typedefs
 
+    accessType_tab = [ "public", "private", "protected" ]
     headerclass = cppHeader.classes[HeaderClass]
     cppclass = CppClass(filename)
     cppclass.set_name(headerclass)
@@ -262,10 +262,11 @@ def gen_class(filename, cppHeader, HeaderClass):
                                       typeid_func["line_number"], \
                                       typeid_func["name"]])
             SIXMOZ_logger.print_debug("%s: Funcs(%d) Meths(%d)"% (cppclass.name, len(cppclass.funcs), len(cppclass.meths)))
-    cppclass.nested_typedefs = headerclass._public_typedefs
-    cppclass.typedefs = cppHeader.typedefs
     #Only for debug
     #stats.display_class(cppclass)
+    typedefs.extend(cppHeader.typedefs.items())
+    #don't think we should bother
+    #    typedefs.extend(headerclass._public_typedefs.items())
     return (cppclass)
 
 def do_parse(files, nb_files):
